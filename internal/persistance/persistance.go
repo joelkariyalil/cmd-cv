@@ -2,8 +2,8 @@ package persistance
 
 import "context"
 
-type Persistance interface {
-	GetRecord(ctx context.Context, uid string)
-	PutRecord(ctx context.Context, uid string, message string)
+type Persistence interface {
+	CreateRecord(ctx context.Context, uid string, message string, ttl int)
+	ReadRecord(ctx context.Context, uid string)
 	DeleteRecord(ctx context.Context, uid string)
 }
