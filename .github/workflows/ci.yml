@@ -32,6 +32,6 @@ jobs:
       - name: Lint
         run: make lint
 
-      - name: Build Artifacts
-        run: make build-artifacts
+      - name: Test
+        run: make test
 
