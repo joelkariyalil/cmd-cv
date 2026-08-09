@@ -87,6 +87,7 @@ func (s *repoSuite) TestCreateRecord() {
 	s.Require().GreaterOrEqual(expiresAt, expectedExpiry)
 }
 
+//nolint:errcheck //disabling it as it's a test function, and we cognizant of the values passed in
 func (s *repoSuite) TestDeleteRecord() {
 	// given
 	otcSize := 6
