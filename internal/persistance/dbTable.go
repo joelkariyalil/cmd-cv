@@ -20,17 +20,17 @@ type dynamoDBAPI interface {
 	UpdateItem(ctx context.Context, params *dynamodb.UpdateItemInput, optFns ...func(*dynamodb.Options)) (*dynamodb.UpdateItemOutput, error)
 }
 
-type DbTable struct {
-	dbClient  dynamoDBAPI
-	tableName string
-}
-
 type Record struct {
 	DbKey
 	Message        string `dynamodbav:"message" json:"message,omitempty"`
 	CreatedAt      int64  `dynamodbav:"created_at" json:"created_at,omitempty"`
 	LastAccessedAt int64  `dynamodbav:"last_accessed_at" json:"last_accessed_at,omitempty"`
 	ExpiresAt      int64  `dynamodbav:"expires_at" json:"expires_at,omitempty"`
+}
+
+type DbTable struct {
+	dbClient  dynamoDBAPI
+	tableName string
 }
 
 func NewDbTable(dbClient dynamoDBAPI, tableName string) *DbTable {
