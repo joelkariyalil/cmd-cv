@@ -3,7 +3,7 @@ package persistance
 import "fmt"
 
 type DbKey struct {
-	PK string `dynamodbav:"PK"`
+	PK string `dynamodbav:"PK" json:"pk,omitempty"`
 }
 
 type NotFoundError struct {
