@@ -20,17 +20,17 @@ type dynamoDBAPI interface {
 	UpdateItem(ctx context.Context, params *dynamodb.UpdateItemInput, optFns ...func(*dynamodb.Options)) (*dynamodb.UpdateItemOutput, error)
 }
 
+type DbTable struct {
+	dbClient  dynamoDBAPI
+	tableName string
+}
+
 type Record struct {
 	DbKey
 	Message        string `dynamodbav:"message" json:"message,omitempty"`
 	CreatedAt      int64  `dynamodbav:"created_at" json:"created_at,omitempty"`
 	LastAccessedAt int64  `dynamodbav:"last_accessed_at" json:"last_accessed_at,omitempty"`
 	ExpiresAt      int64  `dynamodbav:"expires_at" json:"expires_at,omitempty"`
-}
-
-type DbTable struct {
-	dbClient  dynamoDBAPI
-	tableName string
 }
 
 func NewDbTable(dbClient dynamoDBAPI, tableName string) *DbTable {
@@ -86,12 +86,13 @@ func (r *DbTable) CreateRecord(ctx context.Context, uid, message string, ttl tim
 	return nil
 }
 
+// using update API instead of read to also update the timestamp of when it was last accessed
 func (r *DbTable) ReadRecord(ctx context.Context, uid string) (*Record, error) {
 	key := recordKey(uid)
-	now := time.Now().Unix()
+	currentTime := time.Now().Unix()
 
-	update := expression.Set(expression.Name("last_accessed_at"), expression.Value(now))
-	condition := expression.Name("expires_at").GreaterThan(expression.Value(now))
+	update := expression.Set(expression.Name("last_accessed_at"), expression.Value(currentTime))
+	condition := expression.Name("expires_at").GreaterThan(expression.Value(currentTime))
 
 	expr, err := expression.NewBuilder().WithUpdate(update).WithCondition(condition).Build()
 	if err != nil {
