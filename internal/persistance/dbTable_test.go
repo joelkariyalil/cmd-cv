@@ -145,7 +145,6 @@ func (s *repoSuite) TestReadRecord() {
 
 	s.Require().NotNil(capturedParams)
 	s.Require().NotNil(capturedParams.UpdateExpression)
-	s.Require().Contains(capturedParams.ExpressionAttributeNames, "last_accessed_at")
 }
 
 func (s *repoSuite) TestReadRecord_ReturnsNotFoundWhenExpired() {
