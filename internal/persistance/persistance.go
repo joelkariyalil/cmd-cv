@@ -1,9 +1,13 @@
 package persistance
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
-type Persistence interface {
-	CreateRecord(ctx context.Context, uid string, message string, ttl int)
-	ReadRecord(ctx context.Context, uid string)
-	DeleteRecord(ctx context.Context, uid string)
+type Repo interface {
+	CreateRecord(ctx context.Context, uid, message string, ttl time.Duration) error
+	ReadRecord(ctx context.Context, uid string) (*Record, error)
+	DeleteRecord(ctx context.Context, uid string) error
 }
+																															

@@ -126,6 +126,8 @@ func (s *repoSuite) TestReadRecord() {
 				Attributes: map[string]types.AttributeValue{
 					"PK":      &types.AttributeValueMemberS{Value: expectedUID},
 					"message": &types.AttributeValueMemberS{Value: expectedMessage},
+					"last_accessed_at": &types.AttributeValueMemberN{Value: strconv.FormatInt(time.Now().Unix(), 10)},
+					"expires_at": &types.AttributeValueMemberN{Value: strconv.FormatInt(time.Now().Unix(), 10)},
 				},
 			}, nil
 		},
@@ -143,7 +145,6 @@ func (s *repoSuite) TestReadRecord() {
 
 	s.Require().NotNil(capturedParams)
 	s.Require().NotNil(capturedParams.UpdateExpression)
-	s.Require().Contains(capturedParams.ExpressionAttributeNames, "last_accessed_at")
 }
 
 func (s *repoSuite) TestReadRecord_ReturnsNotFoundWhenExpired() {

@@ -2,6 +2,7 @@ package persistance
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -11,23 +12,25 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
+var ErrRecordAlreadyExists = errors.New("record already exists")
+
 type dynamoDBAPI interface {
 	PutItem(ctx context.Context, params *dynamodb.PutItemInput, optFns ...func(*dynamodb.Options)) (*dynamodb.PutItemOutput, error)
 	DeleteItem(ctx context.Context, params *dynamodb.DeleteItemInput, optFns ...func(*dynamodb.Options)) (*dynamodb.DeleteItemOutput, error)
 	UpdateItem(ctx context.Context, params *dynamodb.UpdateItemInput, optFns ...func(*dynamodb.Options)) (*dynamodb.UpdateItemOutput, error)
 }
 
-type Record struct {
-	DbKey
-	Message        string `dynamodbav:"message"`
-	CreatedAt      int64  `dynamodbav:"created_at"`
-	LastAccessedAt int64  `dynamodbav:"last_accessed_at"`
-	ExpiresAt      int64  `dynamodbav:"expires_at"`
-}
-
 type DbTable struct {
 	dbClient  dynamoDBAPI
 	tableName string
+}
+
+type Record struct {
+	DbKey
+	Message        string `dynamodbav:"message" json:"message,omitempty"`
+	CreatedAt      int64  `dynamodbav:"created_at" json:"created_at,omitempty"`
+	LastAccessedAt int64  `dynamodbav:"last_accessed_at" json:"last_accessed_at,omitempty"`
+	ExpiresAt      int64  `dynamodbav:"expires_at" json:"expires_at,omitempty"`
 }
 
 func NewDbTable(dbClient dynamoDBAPI, tableName string) *DbTable {
@@ -39,6 +42,7 @@ func NewDbTable(dbClient dynamoDBAPI, tableName string) *DbTable {
 
 func (r *DbTable) CreateRecord(ctx context.Context, uid, message string, ttl time.Duration) error {
 	currentTime := time.Now()
+
 	rec := Record{
 		DbKey:          recordKey(uid),
 		Message:        message,
@@ -52,23 +56,43 @@ func (r *DbTable) CreateRecord(ctx context.Context, uid, message string, ttl tim
 		return err
 	}
 
+	condition := expression.AttributeNotExists(
+		expression.Name("PK"),
+	)
+
+	expr, err := expression.NewBuilder().
+		WithCondition(condition).
+		Build()
+	if err != nil {
+		return err
+	}
+
 	_, err = r.dbClient.PutItem(ctx, &dynamodb.PutItemInput{
-		Item:      item,
-		TableName: aws.String(r.tableName),
+		TableName:                 aws.String(r.tableName),
+		Item:                      item,
+		ConditionExpression:       expr.Condition(),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
 	})
 	if err != nil {
+		var conditionalErr *types.ConditionalCheckFailedException
+		if errors.As(err, &conditionalErr) {
+			return ErrRecordAlreadyExists
+		}
+
 		return err
 	}
 
 	return nil
 }
 
+// using update API instead of read to also update the timestamp of when it was last accessed
 func (r *DbTable) ReadRecord(ctx context.Context, uid string) (*Record, error) {
 	key := recordKey(uid)
-	now := time.Now().Unix()
+	currentTime := time.Now().Unix()
 
-	update := expression.Set(expression.Name("last_accessed_at"), expression.Value(now))
-	condition := expression.Name("expires_at").GreaterThan(expression.Value(now))
+	update := expression.Set(expression.Name("last_accessed_at"), expression.Value(currentTime))
+	condition := expression.Name("expires_at").GreaterThan(expression.Value(currentTime))
 
 	expr, err := expression.NewBuilder().WithUpdate(update).WithCondition(condition).Build()
 	if err != nil {
