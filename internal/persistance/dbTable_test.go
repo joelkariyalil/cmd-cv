@@ -124,10 +124,10 @@ func (s *repoSuite) TestReadRecord() {
 
 			return &dynamodb.UpdateItemOutput{
 				Attributes: map[string]types.AttributeValue{
-					"PK":      &types.AttributeValueMemberS{Value: expectedUID},
-					"message": &types.AttributeValueMemberS{Value: expectedMessage},
+					"PK":               &types.AttributeValueMemberS{Value: expectedUID},
+					"message":          &types.AttributeValueMemberS{Value: expectedMessage},
 					"last_accessed_at": &types.AttributeValueMemberN{Value: strconv.FormatInt(time.Now().Unix(), 10)},
-					"expires_at": &types.AttributeValueMemberN{Value: strconv.FormatInt(time.Now().Unix(), 10)},
+					"expires_at":       &types.AttributeValueMemberN{Value: strconv.FormatInt(time.Now().Unix(), 10)},
 				},
 			}, nil
 		},
