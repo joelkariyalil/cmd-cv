@@ -1,3 +1,4 @@
+
 package main
 
 import (
@@ -50,51 +51,58 @@ func init() {
 	repo = persistance.NewDbTable(dbClient, tableName)
 }
 
-func createHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) events.APIGatewayV2HTTPResponse {
+func createHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	request := model.CreateRequest{}
-	err := json.Unmarshal([]byte(req.Body), &request)
-	if err != nil {
+
+	if err := json.Unmarshal([]byte(req.Body), &request); err != nil {
 		slog.WarnContext(ctx, "Invalid create request payload", "error", err)
+
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusBadRequest,
 			Headers:    jsonHeaders,
 			Body:       `{"message":"Invalid request payload"}`,
-		}
+		}, nil
 	}
 
-	slog.InfoContext(ctx, "Creating new record", "message_length", len(request.Message))
+	slog.InfoContext(ctx, "Creating new record",
+		"message_length", len(request.Message),
+	)
 
 	for i := range MaxConflictRetries {
 		uid, err := generate.GenerateCode(OtcSize)
 		if err != nil {
 			slog.ErrorContext(ctx, "Failed to generate UID", "error", err)
+
 			return events.APIGatewayV2HTTPResponse{
 				StatusCode: http.StatusInternalServerError,
 				Headers:    jsonHeaders,
 				Body:       `{"message":"Failed to generate UID"}`,
-			}
+			}, errors.Join(errors.New("generate UID"), err)
 		}
 
 		err = repo.CreateRecord(ctx, uid, request.Message, TTL)
 		if err == nil {
-			body, err := json.Marshal(map[string]string{
+			body, marshalErr := json.Marshal(map[string]string{
 				"uid":     uid,
 				"message": "Item created successfully",
 			})
-			if err != nil {
-				slog.ErrorContext(ctx, "Failed to serialize create response", "error", err)
+			if marshalErr != nil {
+				slog.ErrorContext(ctx, "Failed to serialize create response",
+					"error", marshalErr,
+				)
+
 				return events.APIGatewayV2HTTPResponse{
 					StatusCode: http.StatusInternalServerError,
 					Headers:    jsonHeaders,
 					Body:       `{"message":"Failed to serialize response"}`,
-				}
+				}, errors.Join(errors.New("serialize create response"), marshalErr)
 			}
 
 			return events.APIGatewayV2HTTPResponse{
 				StatusCode: http.StatusCreated,
 				Headers:    jsonHeaders,
 				Body:       string(body),
-			}
+			}, nil
 		}
 
 		if errors.Is(err, persistance.ErrRecordAlreadyExists) {
@@ -109,58 +117,63 @@ func createHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) even
 			"uid", uid,
 			"error", err,
 		)
+
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusInternalServerError,
 			Headers:    jsonHeaders,
 			Body:       `{"message":"Failed to create record"}`,
-		}
+		}, errors.Join(errors.New("create record"), err)
 	}
+
+	err := errors.New("exhausted UID conflict retries")
 
 	slog.ErrorContext(ctx, "Exhausted UID conflict retries",
 		"max_attempts", MaxConflictRetries,
 	)
+
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode: http.StatusInternalServerError,
 		Headers:    jsonHeaders,
 		Body:       `{"message":"Failed to create record"}`,
-	}
+	}, err
 }
 
-func deleteHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) events.APIGatewayV2HTTPResponse {
+func deleteHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	request := model.DeleteRequest{}
-	err := json.Unmarshal([]byte(req.Body), &request)
-	if err != nil {
+
+	if err := json.Unmarshal([]byte(req.Body), &request); err != nil {
 		slog.WarnContext(ctx, "Invalid delete request payload", "error", err)
+
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusBadRequest,
 			Headers:    jsonHeaders,
 			Body:       `{"message":"Invalid request payload"}`,
-		}
+		}, nil
 	}
 
 	slog.InfoContext(ctx, "Deleting UID record", "uid", request.UID)
 
-	err = repo.DeleteRecord(ctx, request.UID)
-	if err != nil {
+	if err := repo.DeleteRecord(ctx, request.UID); err != nil {
 		slog.ErrorContext(ctx, "Failed to delete record",
 			"uid", request.UID,
 			"error", err,
 		)
+
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusInternalServerError,
 			Headers:    jsonHeaders,
 			Body:       `{"message":"Failed to delete record"}`,
-		}
+		}, errors.Join(errors.New("delete record"), err)
 	}
 
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode: http.StatusOK,
 		Headers:    jsonHeaders,
 		Body:       `{"message":"Item deleted successfully"}`,
-	}
+	}, nil
 }
 
-func retrieveHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) events.APIGatewayV2HTTPResponse {
+func retrieveHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	id := req.PathParameters["id"]
 
 	if id == "" {
@@ -168,7 +181,7 @@ func retrieveHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) ev
 			StatusCode: http.StatusBadRequest,
 			Headers:    jsonHeaders,
 			Body:       `{"message":"Missing required parameter: id"}`,
-		}
+		}, nil
 	}
 
 	slog.InfoContext(ctx, "Retrieving data for ID record", "id", id)
@@ -179,11 +192,12 @@ func retrieveHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) ev
 			"id", id,
 			"error", err,
 		)
+
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusInternalServerError,
 			Headers:    jsonHeaders,
 			Body:       `{"message":"Failed to retrieve record"}`,
-		}
+		}, errors.Join(errors.New("read record"), err)
 	}
 
 	if rec == nil {
@@ -191,7 +205,7 @@ func retrieveHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) ev
 			StatusCode: http.StatusNotFound,
 			Headers:    jsonHeaders,
 			Body:       `{"message":"Record not found"}`,
-		}
+		}, nil
 	}
 
 	body, err := json.Marshal(rec)
@@ -200,29 +214,33 @@ func retrieveHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) ev
 			"id", id,
 			"error", err,
 		)
+
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusInternalServerError,
 			Headers:    jsonHeaders,
 			Body:       `{"message":"Failed to serialize record"}`,
-		}
+		}, errors.Join(errors.New("serialize retrieved record"), err)
 	}
 
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode: http.StatusOK,
 		Headers:    jsonHeaders,
 		Body:       string(body),
-	}
+	}, nil
 }
 
-func handler(ctx context.Context, req events.APIGatewayV2HTTPRequest) events.APIGatewayV2HTTPResponse {
+func handler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	switch {
-	case req.RawPath == "/create" && req.RequestContext.HTTP.Method == http.MethodPost:
+	case req.RawPath == "/create" &&
+		req.RequestContext.HTTP.Method == http.MethodPost:
 		return createHandler(ctx, req)
 
-	case req.RawPath == "/delete" && req.RequestContext.HTTP.Method == http.MethodDelete:
+	case req.RawPath == "/delete" &&
+		req.RequestContext.HTTP.Method == http.MethodDelete:
 		return deleteHandler(ctx, req)
 
-	case strings.HasPrefix(req.RawPath, "/retrieve/") && req.RequestContext.HTTP.Method == http.MethodGet:
+	case strings.HasPrefix(req.RawPath, "/retrieve/") &&
+		req.RequestContext.HTTP.Method == http.MethodGet:
 		return retrieveHandler(ctx, req)
 
 	default:
@@ -230,7 +248,7 @@ func handler(ctx context.Context, req events.APIGatewayV2HTTPRequest) events.API
 			Headers:    jsonHeaders,
 			StatusCode: http.StatusNotFound,
 			Body:       `{"message":"Route not found"}`,
-		}
+		}, nil
 	}
 }
 

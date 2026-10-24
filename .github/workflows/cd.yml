@@ -1,7 +1,17 @@
+
 name: code-deployment
 
 on:
   workflow_dispatch:
+    inputs:
+      action:
+        description: "Choose whether to deploy or delete the stack"
+        required: true
+        type: choice
+        options:
+          - deploy
+          - delete
+        default: deploy
 
 permissions:
   contents: read
@@ -25,32 +35,54 @@ jobs:
         run: aws sts get-caller-identity
 
       - name: Setup Go
+        if: ${{ inputs.action == 'deploy' }}
         uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true
 
       - name: Setup SAM CLI
+        if: ${{ inputs.action == 'deploy' }}
         uses: aws-actions/setup-sam@v2
         with:
           use-installer: true
 
       - name: Install dependencies
+        if: ${{ inputs.action == 'deploy' }}
         run: |
           sudo apt-get update
           sudo apt-get install -y zip make
 
       - name: Validate SAM template
+        if: ${{ inputs.action == 'deploy' }}
         run: sam validate --lint
 
       - name: Lint
+        if: ${{ inputs.action == 'deploy' }}
         run: make lint
 
       - name: Test
+        if: ${{ inputs.action == 'deploy' }}
         run: make test
 
       - name: Build Artifacts
+        if: ${{ inputs.action == 'deploy' }}
         run: make build-artifacts
 
       - name: Deploy
+        if: ${{ inputs.action == 'deploy' }}
         run: make deploy
+
+      - name: Delete CloudFormation stack
+        if: ${{ inputs.action == 'delete' }}
+        run: |
+          aws cloudformation delete-stack \
+            --stack-name cmd-cv \
+            --region us-west-2
+
+      - name: Wait for stack deletion
+        if: ${{ inputs.action == 'delete' }}
+        run: |
+          aws cloudformation wait stack-delete-complete \
+            --stack-name cmd-cv \
+            --region us-west-2
