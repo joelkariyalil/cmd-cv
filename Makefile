@@ -1,21 +1,15 @@
 .PHONY: build test format lint lint-fix build-go build-artifacts
 
-LAMBDA_SERVICES := create delete retrieve
-
 build-go:
-	@mkdir -p bin
-	@for service in ${LAMBDA_SERVICES}; do \
-		echo "Building Service: $$service"; \
-		GOFLAGS=-buildvcs=false GOOS=linux go build -ldflags="-s -w" -o "bin/$$service/bootstrap" "./cmd/$$service"; \
-		done
+	echo "Building Service\n";
+	mkdir -p bin/cmd-cv
+	GOFLAGS=-buildvcs=false GOOS=linux go build -ldflags="-s -w" -o "bin/cmd-cv/bootstrap" "./cmd/"
 
 
 build-artifacts: 
+	echo "Packing Artifacts";
 	$(MAKE) build-go
-	@for service in ${LAMBDA_SERVICES}; do \	
-		echo "Packing Artifacts: $$service"; \
-			cd bin && zip -j $$service.zip $$service/bootstrap && rm -r $$service; \	
-		done
+	cd bin && zip -j artifact.zip cmd-cv/bootstrap && rm -r cmd-cv/bootstrap
 
 test:
 	@echo "\t Testing"
@@ -41,4 +35,3 @@ lint-fix:
 update:
 	@echo "\t Updating"
 	@go get -u ./... && $(MAKE) format
-
