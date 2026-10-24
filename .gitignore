@@ -1,6 +1,10 @@
 .DS_Store
 
 # IDE
-.idea/
+.idea
 .vscode
 
+# Binary
+bin/
+
+.aws-sam/
