@@ -27,10 +27,10 @@ type DbTable struct {
 
 type Record struct {
 	DbKey
-	Message        string `dynamodbav:"message" json:"message,omitempty"`
-	CreatedAt      int64  `dynamodbav:"created_at" json:"created_at,omitempty"`
+	Message        string `dynamodbav:"message"          json:"message,omitempty"`
+	CreatedAt      int64  `dynamodbav:"created_at"       json:"created_at,omitempty"`
 	LastAccessedAt int64  `dynamodbav:"last_accessed_at" json:"last_accessed_at,omitempty"`
-	ExpiresAt      int64  `dynamodbav:"expires_at" json:"expires_at,omitempty"`
+	ExpiresAt      int64  `dynamodbav:"expires_at"       json:"expires_at,omitempty"`
 }
 
 func NewDbTable(dbClient dynamoDBAPI, tableName string) *DbTable {
@@ -75,8 +75,7 @@ func (r *DbTable) CreateRecord(ctx context.Context, uid, message string, ttl tim
 		ExpressionAttributeValues: expr.Values(),
 	})
 	if err != nil {
-		var conditionalErr *types.ConditionalCheckFailedException
-		if errors.As(err, &conditionalErr) {
+		if _, ok := errors.AsType[*types.ConditionalCheckFailedException](err); ok {
 			return ErrRecordAlreadyExists
 		}
 
@@ -86,7 +85,6 @@ func (r *DbTable) CreateRecord(ctx context.Context, uid, message string, ttl tim
 	return nil
 }
 
-// using update API instead of read to also update the timestamp of when it was last accessed
 func (r *DbTable) ReadRecord(ctx context.Context, uid string) (*Record, error) {
 	key := recordKey(uid)
 	currentTime := time.Now().Unix()

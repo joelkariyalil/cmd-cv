@@ -10,4 +10,3 @@ type Repo interface {
 	ReadRecord(ctx context.Context, uid string) (*Record, error)
 	DeleteRecord(ctx context.Context, uid string) error
 }
-																															
