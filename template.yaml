@@ -1,45 +1,86 @@
-AWSTemplateFormatVersion: 2010-09-09
-Transform: AWS::Serverless-
 
-Metadata:
-  AWS::ServerlessRepo::Application:
-    Name: "cmd-cv"
-    Description: 'drop box for text'
-    Author: 'Joel Thomas Chacko'
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
 
+Description: Drop box for text
 
 Parameters:
   TABLENAME:
     Type: String
-    Description: Dynamodb table name
-    Default: 'cmd-cv-table'
-
-  REGIONNAME:
-    Type: String
-    Description: AWS Region where it is deployed install
-    Default: 'us-west-2'
+    Description: DynamoDB table name
+    Default: cmd-cv-table
 
   ENV:
     Type: String
-    Description: ENV
-    Default: 'local'
-
+    Description: Environment
+    Default: local
 
 Resources:
-  cmd-cv-table:
+  CmdCvDynamodbTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Ref TABLENAME
       AttributeDefinitions:
-        - AttributeName: 
-          AttributeType: 
+        - AttributeName: id
+          AttributeType: S
       KeySchema:
-        - AttributeName: 
-          KeyType: 
-      ProvisionedThroughput:
-        ReadCapacityUnits: 1
-        WriteCapacityUnits: 1
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
 
-  create:
+  CmdCvLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                Resource: !GetAtt CmdCvDynamodbTable.Arn
+
+
+  CmdCvLambda:
     Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./bin/cmd-cv/artifact.zip
+      Runtime: provided.al2023
+      Handler: bootstrap
+      Architectures:
+        - x86_64
+      Role: !GetAtt CmdCvLambdaRole.Arn
+      Environment:
+        Variables:
+          ENV: !Ref ENV
+          TABLENAME: !Ref TABLENAME
+      Events:
+        Create:
+          Type: HttpApi
+          Properties:
+            Path: /create
+            Method: POST
+
+        Delete:
+          Type: HttpApi
+          Properties:
+            Path: /delete
+            Method: DELETE
+
+        Retrieve:
+          Type: HttpApi
+          Properties:
+            Path: /retrieve/{id}
+            Method: GET
     
