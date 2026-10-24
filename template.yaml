@@ -1,1 +1,45 @@
-# wohoo! my first sam application
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: "cmd-cv"
+    Description: 'drop box for text'
+    Author: 'Joel Thomas Chacko'
+
+
+Parameters:
+  TABLENAME:
+    Type: String
+    Description: Dynamodb table name
+    Default: 'cmd-cv-table'
+
+  REGIONNAME:
+    Type: String
+    Description: AWS Region where it is deployed install
+    Default: 'us-west-2'
+
+  ENV:
+    Type: String
+    Description: ENV
+    Default: 'local'
+
+
+Resources:
+  cmd-cv-table:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref TABLENAME
+      AttributeDefinitions:
+        - AttributeName: 
+          AttributeType: 
+      KeySchema:
+        - AttributeName: 
+          KeyType: 
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+
+  create:
+    Type: AWS::Serverless::Function
+    
