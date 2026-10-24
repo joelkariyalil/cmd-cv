@@ -1,14 +1,13 @@
-.PHONY: build test format lint lint-fix build-go build-artifacts deploy
+.PHONY: build test format lint lint-fix build-go build-artifacts deploy update
 
 build-go:
 	@echo "Building service"
 	mkdir -p bin/cmd-cv
-	GOFLAGS=-buildvcs=false GOOS=linux go build -ldflags="-s -w" -o bin/cmd-cv/bootstrap ./cmd/
+	GOFLAGS=-buildvcs=false GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o bin/cmd-cv/bootstrap ./cmd/
 
-build-artifacts:
+build-artifacts: build-go
 	@echo "Packing artifacts"
-	$(MAKE) build-go
-	cd bin && zip -j -FS artifact.zip cmd-cv/bootstrap
+	cd bin/cmd-cv && zip -j -FS artifact.zip bootstrap
 
 test:
 	@echo "Testing"
