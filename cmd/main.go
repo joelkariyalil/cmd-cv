@@ -82,8 +82,7 @@ func createHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 		err = repo.CreateRecord(ctx, uid, request.Message, TTL)
 		if err == nil {
 			body, marshalErr := json.Marshal(map[string]string{
-				"uid":     uid,
-				"message": "Item created successfully",
+				"uid": uid,
 			})
 			if marshalErr != nil {
 				slog.ErrorContext(ctx, "Failed to serialize create response",
@@ -105,17 +104,11 @@ func createHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 		}
 
 		if errors.Is(err, persistance.ErrRecordAlreadyExists) {
-			slog.InfoContext(ctx, "Generated duplicate UID, retrying",
-				"uid", uid,
-				"attempt", i+1,
-			)
+			slog.InfoContext(ctx, "Generated duplicate UID, retrying", "uid", uid, "attempt", i+1)
 			continue
 		}
 
-		slog.ErrorContext(ctx, "Failed to create record",
-			"uid", uid,
-			"error", err,
-		)
+		slog.ErrorContext(ctx, "Failed to create record", "uid", uid, "error", err)
 
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusInternalServerError,
@@ -126,9 +119,7 @@ func createHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 
 	err := errors.New("exhausted UID conflict retries")
 
-	slog.ErrorContext(ctx, "Exhausted UID conflict retries",
-		"max_attempts", MaxConflictRetries,
-	)
+	slog.ErrorContext(ctx, "Exhausted UID conflict retries", "max_attempts", MaxConflictRetries)
 
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode: http.StatusInternalServerError,
@@ -168,7 +159,6 @@ func deleteHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode: http.StatusOK,
 		Headers:    jsonHeaders,
-		Body:       `{"message":"Item deleted successfully"}`,
 	}, nil
 }
 
@@ -199,21 +189,16 @@ func retrieveHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (e
 		}, errors.Join(errors.New("read record"), err)
 	}
 
-	if rec == nil {
-		return events.APIGatewayV2HTTPResponse{
-			StatusCode: http.StatusNotFound,
-			Headers:    jsonHeaders,
-			Body:       `{"message":"Record not found"}`,
-		}, nil
+	response := model.RetrieveResponse{
+		Message:        rec.Message,
+		CreatedAt:      time.Unix(rec.CreatedAt, 0).UTC(),
+		ExpiresAt:      time.Unix(rec.ExpiresAt, 0).UTC(),
+		LastAccessedAt: time.Unix(rec.LastAccessedAt, 0).UTC(),
 	}
 
-	body, err := json.Marshal(rec)
+	body, err := json.Marshal(response)
 	if err != nil {
-		slog.ErrorContext(ctx, "Failed to serialize retrieved record",
-			"id", id,
-			"error", err,
-		)
-
+		slog.ErrorContext(ctx, "Failed to serialize retrieved record", "id", id, "error", err)
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusInternalServerError,
 			Headers:    jsonHeaders,
