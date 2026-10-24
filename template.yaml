@@ -21,10 +21,10 @@ Resources:
     Properties:
       TableName: !Ref TABLENAME
       AttributeDefinitions:
-        - AttributeName: id
+        - AttributeName: PK
           AttributeType: S
       KeySchema:
-        - AttributeName: id
+        - AttributeName: PK
           KeyType: HASH
       BillingMode: PAY_PER_REQUEST
 
@@ -47,10 +47,10 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - dynamodb:GetItem
                   - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
                 Resource: !GetAtt CmdCvDynamodbTable.Arn
-
 
   CmdCvLambda:
     Type: AWS::Serverless::Function
@@ -64,7 +64,7 @@ Resources:
       Environment:
         Variables:
           ENV: !Ref ENV
-          TABLENAME: !Ref TABLENAME
+          TABLE_NAME: !Ref TABLENAME
       Events:
         Create:
           Type: HttpApi
@@ -83,4 +83,3 @@ Resources:
           Properties:
             Path: /retrieve/{id}
             Method: GET
-    
