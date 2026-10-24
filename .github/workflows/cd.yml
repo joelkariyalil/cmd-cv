@@ -28,11 +28,20 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
+          cache: true
+
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
 
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y zip make
+
+      - name: Validate SAM template
+        run: sam validate --lint
 
       - name: Lint
         run: make lint
@@ -45,4 +54,3 @@ jobs:
 
       - name: Deploy
         run: make deploy
-

@@ -6,3 +6,5 @@
 
 # Binary
 bin/
+
+.aws-sam/
