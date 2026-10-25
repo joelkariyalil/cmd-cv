@@ -168,6 +168,29 @@ func (s *repoSuite) TestReadRecord_ReturnsNotFoundWhenDeletedOrExpired() {
 	s.Require().Nil(rec)
 }
 
+func (s *repoSuite) TestDeleteRecord_ReturnsNotFoundWhenRecordDoesNotExist() {
+	// given
+	uid := "missing-record"
+
+	dbMock := &dynamodbMock{
+		DeleteItemMock: func(
+			ctx context.Context,
+			params *dynamodb.DeleteItemInput,
+			optFns ...func(*dynamodb.Options),
+		) (*dynamodb.DeleteItemOutput, error) {
+			return nil, &types.ConditionalCheckFailedException{}
+		},
+	}
+
+	s.repo = persistance.NewDbTable(dbMock, "mock-table")
+
+	// when
+	err := s.repo.DeleteRecord(context.Background(), uid)
+
+	// then
+	s.Require().ErrorIs(err, persistance.ErrRecordNotFound)
+}
+
 func convertToIntFromStr(s string) (int64, error) {
 	i, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
