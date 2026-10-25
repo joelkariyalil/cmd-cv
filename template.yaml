@@ -19,6 +19,7 @@ Resources:
   ServerlessHttpApi:
     Type: AWS::Serverless::HttpApi
     Properties:
+      StageName: $default
       CorsConfiguration:
         AllowOrigins:
           - 'https://joelkariyalil.github.io'
