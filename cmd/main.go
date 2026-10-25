@@ -21,11 +21,11 @@ import (
 
 const (
 	TTL                time.Duration = time.Minute * 10
-	OtcSize                          = 6 // one time code
+	OtcSize                          = 4 // one-time code
 	MaxConflictRetries               = 5
 )
 
-//nolint:gochecknoglobals // lambda startup optimization
+//nolint:gochecknoglobals // Lambda startup optimization
 var (
 	repo        persistance.Repo
 	jsonHeaders = map[string]string{
@@ -33,7 +33,7 @@ var (
 	}
 )
 
-//nolint:gochecknoinits // lambda startup optimization
+//nolint:gochecknoinits // Lambda startup optimization
 func init() {
 	tableName := os.Getenv("TABLE_NAME")
 	if tableName == "" {
@@ -63,9 +63,7 @@ func createHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 		}, nil
 	}
 
-	slog.InfoContext(ctx, "Creating new record",
-		"message_length", len(request.Message),
-	)
+	slog.InfoContext(ctx, "Creating new record", "message_length", len(request.Message))
 
 	for i := range MaxConflictRetries {
 		uid, err := generate.GenerateCode(OtcSize)
@@ -76,7 +74,7 @@ func createHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 				StatusCode: http.StatusInternalServerError,
 				Headers:    jsonHeaders,
 				Body:       `{"message":"Failed to generate UID"}`,
-			}, errors.Join(errors.New("generate UID"), err)
+			}, nil
 		}
 
 		err = repo.CreateRecord(ctx, uid, request.Message, TTL)
@@ -85,15 +83,13 @@ func createHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 				"uid": uid,
 			})
 			if marshalErr != nil {
-				slog.ErrorContext(ctx, "Failed to serialize create response",
-					"error", marshalErr,
-				)
+				slog.ErrorContext(ctx, "Failed to serialize create response", "error", marshalErr)
 
 				return events.APIGatewayV2HTTPResponse{
 					StatusCode: http.StatusInternalServerError,
 					Headers:    jsonHeaders,
 					Body:       `{"message":"Failed to serialize response"}`,
-				}, errors.Join(errors.New("serialize create response"), marshalErr)
+				}, nil
 			}
 
 			return events.APIGatewayV2HTTPResponse{
@@ -104,7 +100,10 @@ func createHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 		}
 
 		if errors.Is(err, persistance.ErrRecordAlreadyExists) {
-			slog.InfoContext(ctx, "Generated duplicate UID, retrying", "uid", uid, "attempt", i+1)
+			slog.InfoContext(ctx, "Generated duplicate UID, retrying",
+				"uid", uid,
+				"attempt", i+1,
+			)
 			continue
 		}
 
@@ -114,18 +113,18 @@ func createHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 			StatusCode: http.StatusInternalServerError,
 			Headers:    jsonHeaders,
 			Body:       `{"message":"Failed to create record"}`,
-		}, errors.Join(errors.New("create record"), err)
+		}, nil
 	}
 
-	err := errors.New("exhausted UID conflict retries")
-
-	slog.ErrorContext(ctx, "Exhausted UID conflict retries", "max_attempts", MaxConflictRetries)
+	slog.ErrorContext(ctx, "Exhausted UID conflict retries",
+		"max_attempts", MaxConflictRetries,
+	)
 
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode: http.StatusInternalServerError,
 		Headers:    jsonHeaders,
 		Body:       `{"message":"Failed to create record"}`,
-	}, err
+	}, nil
 }
 
 func deleteHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
@@ -141,6 +140,14 @@ func deleteHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 		}, nil
 	}
 
+	if request.UID == "" {
+		return events.APIGatewayV2HTTPResponse{
+			StatusCode: http.StatusBadRequest,
+			Headers:    jsonHeaders,
+			Body:       `{"message":"Missing required field: uid"}`,
+		}, nil
+	}
+
 	slog.InfoContext(ctx, "Deleting UID record", "uid", request.UID)
 
 	if err := repo.DeleteRecord(ctx, request.UID); err != nil {
@@ -153,7 +160,7 @@ func deleteHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 			StatusCode: http.StatusInternalServerError,
 			Headers:    jsonHeaders,
 			Body:       `{"message":"Failed to delete record"}`,
-		}, errors.Join(errors.New("delete record"), err)
+		}, nil
 	}
 
 	return events.APIGatewayV2HTTPResponse{
@@ -177,6 +184,16 @@ func retrieveHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (e
 
 	rec, err := repo.ReadRecord(ctx, id)
 	if err != nil {
+		if errors.Is(err, persistance.ErrRecordNotFound) {
+			slog.InfoContext(ctx, "Record not found or expired", "id", id)
+
+			return events.APIGatewayV2HTTPResponse{
+				StatusCode: http.StatusNotFound,
+				Headers:    jsonHeaders,
+				Body:       `{"message":"Record not found"}`,
+			}, nil
+		}
+
 		slog.ErrorContext(ctx, "Failed to retrieve record",
 			"id", id,
 			"error", err,
@@ -186,7 +203,7 @@ func retrieveHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (e
 			StatusCode: http.StatusInternalServerError,
 			Headers:    jsonHeaders,
 			Body:       `{"message":"Failed to retrieve record"}`,
-		}, errors.Join(errors.New("read record"), err)
+		}, nil
 	}
 
 	response := model.RetrieveResponse{
@@ -198,12 +215,16 @@ func retrieveHandler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (e
 
 	body, err := json.Marshal(response)
 	if err != nil {
-		slog.ErrorContext(ctx, "Failed to serialize retrieved record", "id", id, "error", err)
+		slog.ErrorContext(ctx, "Failed to serialize retrieved record",
+			"id", id,
+			"error", err,
+		)
+
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusInternalServerError,
 			Headers:    jsonHeaders,
 			Body:       `{"message":"Failed to serialize record"}`,
-		}, errors.Join(errors.New("serialize retrieved record"), err)
+		}, nil
 	}
 
 	return events.APIGatewayV2HTTPResponse{
@@ -229,8 +250,8 @@ func handler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.AP
 
 	default:
 		return events.APIGatewayV2HTTPResponse{
-			Headers:    jsonHeaders,
 			StatusCode: http.StatusNotFound,
+			Headers:    jsonHeaders,
 			Body:       `{"message":"Route not found"}`,
 		}, nil
 	}
