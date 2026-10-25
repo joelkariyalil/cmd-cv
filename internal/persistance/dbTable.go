@@ -12,7 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
-var ErrRecordAlreadyExists = errors.New("record already exists")
+var (
+	ErrRecordAlreadyExists = errors.New("record already exists")
+	ErrRecordNotFound      = errors.New("record not found")
+)
 
 type dynamoDBAPI interface {
 	PutItem(ctx context.Context, params *dynamodb.PutItemInput, optFns ...func(*dynamodb.Options)) (*dynamodb.PutItemOutput, error)
@@ -56,9 +59,7 @@ func (r *DbTable) CreateRecord(ctx context.Context, uid, message string, ttl tim
 		return err
 	}
 
-	condition := expression.AttributeNotExists(
-		expression.Name("PK"),
-	)
+	condition := expression.AttributeNotExists(expression.Name("PK"))
 
 	expr, err := expression.NewBuilder().
 		WithCondition(condition).
@@ -89,10 +90,18 @@ func (r *DbTable) ReadRecord(ctx context.Context, uid string) (*Record, error) {
 	key := recordKey(uid)
 	currentTime := time.Now().Unix()
 
-	update := expression.Set(expression.Name("last_accessed_at"), expression.Value(currentTime))
-	condition := expression.Name("expires_at").GreaterThan(expression.Value(currentTime))
+	update := expression.Set(
+		expression.Name("last_accessed_at"),
+		expression.Value(currentTime),
+	)
+	condition := expression.Name("expires_at").GreaterThan(
+		expression.Value(currentTime),
+	)
 
-	expr, err := expression.NewBuilder().WithUpdate(update).WithCondition(condition).Build()
+	expr, err := expression.NewBuilder().
+		WithUpdate(update).
+		WithCondition(condition).
+		Build()
 	if err != nil {
 		return nil, err
 	}
@@ -112,6 +121,10 @@ func (r *DbTable) ReadRecord(ctx context.Context, uid string) (*Record, error) {
 		ReturnValues:              types.ReturnValueAllNew,
 	})
 	if err != nil {
+		if _, ok := errors.AsType[*types.ConditionalCheckFailedException](err); ok {
+			return nil, ErrRecordNotFound
+		}
+
 		return nil, err
 	}
 

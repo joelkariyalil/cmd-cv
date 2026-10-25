@@ -147,7 +147,7 @@ func (s *repoSuite) TestReadRecord() {
 	s.Require().NotNil(capturedParams.UpdateExpression)
 }
 
-func (s *repoSuite) TestReadRecord_ReturnsNotFoundWhenExpired() {
+func (s *repoSuite) TestReadRecord_ReturnsNotFoundWhenDeletedOrExpired() {
 	// given
 	otcSize := 6
 	expectedUID, _ := generate.GenerateCode(otcSize)
@@ -164,7 +164,7 @@ func (s *repoSuite) TestReadRecord_ReturnsNotFoundWhenExpired() {
 	rec, err := s.repo.ReadRecord(context.Background(), expectedUID)
 
 	// then
-	s.Require().Error(err)
+	s.Require().ErrorIs(err, persistance.ErrRecordNotFound)
 	s.Require().Nil(rec)
 }
 
