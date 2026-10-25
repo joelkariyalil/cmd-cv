@@ -1,6 +1,6 @@
 # CMD-CV (drop-box for txt)
 
-[![Code Deployment](https://github.com/joelkariyalil/cmd-cv/actions/workflows/cd.yml/badge.svg)](https://github.com/joelkariyalil/cmd-cv/actions/workflows/cd.yml)
+[![Code Deployment](https://github.com/joelkariyalil/cmd-cv/actions/workflows/cd.yml/badge.svg)](https://github.com/joelkariyalil/cmd-cv/actions/workflows/cd.yml) [![code-integration](https://github.com/joelkariyalil/cmd-cv/actions/workflows/ci.yml/badge.svg)](https://github.com/joelkariyalil/cmd-cv/actions/workflows/ci.yml)
 
 **A simple, serverless text vault for sharing messages between devices.**
 
