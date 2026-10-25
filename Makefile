@@ -20,10 +20,10 @@ format:
 	go fmt ./...
 
 lint:
-	GOFLAGS=-buildvcs=false go tool golangci-lint run
+	GOFLAGS=-buildvcs=false go tool golangci-lint run --config .ci/.golangci.yml
 
 lint-fix:
-	GOFLAGS=-buildvcs=false go tool golangci-lint run --fix
+	GOFLAGS=-buildvcs=false go tool golangci-lint run --fix --config .ci/.golangci.yml
 
 deploy:
 	sam deploy \
