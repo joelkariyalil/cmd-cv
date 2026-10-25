@@ -16,7 +16,7 @@ Parameters:
     Default: local
 
 Resources:
-  CmdCvHttpApi:
+  ServerlessHttpApi:
     Type: AWS::Serverless::HttpApi
     Properties:
       CorsConfiguration:
@@ -86,20 +86,20 @@ Resources:
         Create:
           Type: HttpApi
           Properties:
-            ApiId: !Ref CmdCvHttpApi
+            ApiId: !Ref ServerlessHttpApi
             Path: /create
             Method: POST
 
         Delete:
           Type: HttpApi
           Properties:
-            ApiId: !Ref CmdCvHttpApi
+            ApiId: !Ref ServerlessHttpApi
             Path: /delete
             Method: DELETE
 
         Retrieve:
           Type: HttpApi
           Properties:
-            ApiId: !Ref CmdCvHttpApi
+            ApiId: !Ref ServerlessHttpApi
             Path: /retrieve/{id}
             Method: GET
