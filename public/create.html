@@ -1,31 +1,727 @@
+
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark"><title>Create a secret | Secret Vault</title><style>
-:root{color-scheme:dark;--bg:#080b12;--panel:#101622;--border:#263247;--text:#f2f5fb;--muted:#9aa8bd;--accent:#8b7cff;--danger:#ff6577;--success:#5fe0b0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-*{box-sizing:border-box}html{min-height:100%;background:var(--bg)}body{min-height:100vh;margin:0;padding:24px 16px;display:flex;align-items:center;justify-content:center;color:var(--text);background:radial-gradient(ellipse at 15% 15%,rgba(98,77,230,.16),transparent 34rem),radial-gradient(ellipse at 90% 85%,rgba(33,155,177,.10),transparent 30rem),var(--bg)}
-.shell{width:min(100%,900px);margin:auto}.topline{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:18px}.brand{display:flex;align-items:center;gap:11px;font-size:.95rem;font-weight:800;letter-spacing:.02em}.brand-mark{width:38px;height:38px;display:grid;place-items:center;border:1px solid #3b3b6c;border-radius:12px;background:linear-gradient(145deg,#242448,#171e2e);font-size:18px}.status-pill{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:.78rem}.status-dot{width:7px;height:7px;border-radius:50%;background:var(--success);box-shadow:0 0 12px rgba(95,224,176,.6)}
-.panel{border:1px solid var(--border);border-radius:24px;padding:clamp(22px,5vw,46px);background:linear-gradient(145deg,rgba(18,25,39,.97),rgba(12,17,27,.98));box-shadow:0 28px 90px rgba(0,0,0,.38),inset 0 1px rgba(255,255,255,.025)}.hero{text-align:center;max-width:640px;margin:0 auto 28px}.eyebrow{color:#a69bff;font-size:.72rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;margin-bottom:13px}h1{margin:0;font-size:clamp(2rem,5vw,3.3rem);line-height:1.06;letter-spacing:-.055em}.hero p{max-width:510px;margin:15px auto 0;color:var(--muted);line-height:1.7;font-size:.98rem}
-nav{display:flex;justify-content:center;gap:7px;margin:0 auto 28px;padding:5px;width:fit-content;max-width:100%;border:1px solid #242e41;border-radius:13px;background:#0b101a}nav a{text-decoration:none;color:var(--muted);font-size:.86rem;font-weight:700;padding:10px 17px;border-radius:9px}nav a:hover{color:var(--text)}nav a[aria-current=page]{color:#fff;background:#29264d;box-shadow:inset 0 0 0 1px #454078}
-.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.choice{display:flex;flex-direction:column;align-items:flex-start;min-height:235px;padding:25px;border:1px solid #29344a;border-radius:18px;background:linear-gradient(155deg,#151e2d,#101621);transition:border-color .2s,transform .2s}.choice:hover{border-color:#6157a5;transform:translateY(-2px)}.choice-icon{display:grid;place-items:center;width:44px;height:44px;border:1px solid #393765;border-radius:13px;background:#242342;font-size:21px;margin-bottom:22px}.choice h2{margin:0;font-size:1.18rem}.choice p{margin:10px 0 22px;color:var(--muted);line-height:1.65;font-size:.91rem}
-.action-link,button{display:inline-flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:46px;padding:12px 16px;border-radius:11px;border:1px solid transparent;background:var(--accent);color:#fff;text-decoration:none;font:inherit;font-size:.9rem;font-weight:800;cursor:pointer;transition:background .15s}.action-link{margin-top:auto}button:hover:not(:disabled),.action-link:hover{background:#7667f1}button:disabled{cursor:wait;opacity:.6}.button-secondary{background:#1a2434;border-color:#344158;color:var(--text)}.button-secondary:hover:not(:disabled){background:#263249}.button-danger{background:rgba(255,101,119,.12);border-color:rgba(255,101,119,.35);color:#ff9ba7}.button-danger:hover:not(:disabled){background:rgba(255,101,119,.22)}
-.form-panel{max-width:640px;margin:0 auto}.form-panel h2{margin:0 0 8px;font-size:1.15rem}.description{color:var(--muted);margin:0 0 22px;line-height:1.6;font-size:.92rem}label{display:block;margin:18px 0 8px;font-size:.86rem;color:#dbe3f1;font-weight:750}input,textarea{display:block;width:100%;border:1px solid #303d53;border-radius:11px;padding:14px 15px;color:var(--text);background:#0a101a;font:inherit;outline:none}input::placeholder,textarea::placeholder{color:#64728a}input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(139,124,255,.13)}textarea{min-height:155px;resize:vertical;line-height:1.6}.button-row{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:13px}
-#status{margin-top:19px;border:1px solid #28354a;border-radius:11px;padding:13px 15px;color:#b7c4d8;background:#0b111b;line-height:1.55;font-size:.88rem;overflow-wrap:anywhere;white-space:pre-wrap}#status[data-kind=success]{color:var(--success);border-color:rgba(95,224,176,.25);background:rgba(95,224,176,.06)}#status[data-kind=error]{color:#ff9ba7;border-color:rgba(255,101,119,.28);background:rgba(255,101,119,.06)}.result-card{margin-top:18px;padding:18px;border:1px solid #303c53;border-radius:14px;background:#0c121d}.result-card h3{margin:0 0 12px;font-size:.98rem}.secret-message{margin:0;padding:14px;border-radius:10px;border:1px solid #263247;background:#080d15;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6;color:#eef2fb}dl{display:grid;grid-template-columns:140px minmax(0,1fr);gap:12px;margin:18px 0 0;font-size:.86rem}dt{color:var(--muted)}dd{margin:0;overflow-wrap:anywhere;color:#e2e8f3}.hidden{display:none!important}footer{text-align:center;margin:19px auto 0;max-width:620px;color:#6f7d93;font-size:.78rem;line-height:1.65}
-@media(max-width:620px){body{padding:16px 10px;align-items:flex-start}.topline{margin-bottom:12px}.panel{border-radius:19px;padding:22px 17px}.cards{grid-template-columns:1fr}.choice{min-height:0}.choice-icon{margin-bottom:16px}nav a{padding:9px 13px}.button-row{grid-template-columns:1fr}dl{grid-template-columns:1fr;gap:5px}dd{margin-bottom:8px}}
-</style></head>
-<body><div class="shell">
-<div class="topline"><div class="brand"><span class="brand-mark" aria-hidden="true">🔐</span><span>CMD-CV <span style="color:#76839a;font-weight:600">/ SECRET VAULT</span></span></div><div class="status-pill"><span class="status-dot"></span> Ready</div></div>
-<main class="panel"><header class="hero"><div class="eyebrow">Your private message space</div><h1>Create a secret</h1><p>Store a message and receive a code to retrieve it later.</p></header>
-<nav aria-label="Main navigation"><a href="./index.html">Home</a><a href="./create.html" aria-current="page">Create</a><a href="./read.html">Read</a></nav>
-<section class="form-panel"><h2>Create a new secret</h2><p class="description">Write the message you want to store. When it is created, keep the one-time code somewhere safe.</p>
-<label for="message">Secret message</label><textarea id="message" placeholder="Type your message here..." maxlength="10000"></textarea>
-<button id="createButton" type="button">Create secret →</button>
-<div id="createdResult" class="result-card hidden" aria-live="polite"><h3>Your one-time code</h3><p id="createdUid" class="secret-message"></p><div class="button-row"><button id="copyUidButton" class="button-secondary" type="button">Copy code</button><a class="action-link" href="./read.html">Go to Read page →</a></div></div>
-<div id="status" role="status" aria-live="polite" data-kind="info">Ready to create a secret.</div></section>
-</main><footer>Keep your one-time code private. Anyone with a valid code may be able to access its associated record.</footer></div>
-<script src="./config.js"></script><script>
-const statusBox=document.getElementById("status"),createButton=document.getElementById("createButton");
-function getApiBaseUrl(){const value=window.APP_CONFIG?.API_BASE_URL?.trim();if(!value)throw new Error("API configuration is missing. Check config.js.");let url;try{url=new URL(value)}catch{throw new Error("API_BASE_URL in config.js is not a valid URL.")}if(url.protocol!=="https:")throw new Error("API_BASE_URL must use HTTPS.");return url.toString().replace(/\/+$/,"")}
-function showStatus(message,kind="info"){statusBox.textContent=message;statusBox.dataset.kind=kind}
-async function apiRequest(path,options={}){let response;try{response=await fetch(`${getApiBaseUrl()}${path}`,{...options,headers:{...(options.body?{"Content-Type":"application/json"}:{}),...options.headers}})}catch{throw new Error("Could not reach the API. Check the URL and API Gateway CORS settings.")}const text=await response.text();let data={};if(text){try{data=JSON.parse(text)}catch{data={message:text}}}if(!response.ok)throw new Error(typeof data.message==="string"?data.message:`Request failed with HTTP ${response.status}.`);return data}
-createButton.addEventListener("click",async()=>{const message=document.getElementById("message").value;if(!message.trim()){showStatus("Please enter a message before creating a secret.","error");return}createButton.disabled=true;createButton.textContent="Creating...";document.getElementById("createdResult").classList.add("hidden");showStatus("Creating your secret...");try{const data=await apiRequest("/create",{method:"POST",body:JSON.stringify({message})});if(!data||!data.uid)throw new Error("The API response did not include a UID.");document.getElementById("createdUid").textContent=String(data.uid);document.getElementById("createdResult").classList.remove("hidden");showStatus("Secret created. Copy and save your one-time code.","success")}catch(error){showStatus(`Could not create secret: ${error.message}`,"error")}finally{createButton.disabled=false;createButton.textContent="Create secret →"}});
-document.getElementById("copyUidButton").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(document.getElementById("createdUid").textContent);showStatus("One-time code copied to clipboard.","success")}catch{showStatus("Clipboard access failed. Select and copy the code manually.","error")}});
-</script></body></html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>Create a Secret | Secret Vault</title>
+
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg: #080b12;
+            --panel: #101622;
+            --border: #263247;
+            --text: #f2f5fb;
+            --muted: #9aa8bd;
+            --accent: #8b7cff;
+            --danger: #ff6577;
+            --success: #5fe0b0;
+
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+                BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            min-height: 100%;
+            background: var(--bg);
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            padding: 24px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+            background:
+                radial-gradient(
+                    ellipse at 15% 15%,
+                    rgba(98, 77, 230, .16),
+                    transparent 34rem
+                ),
+                radial-gradient(
+                    ellipse at 90% 85%,
+                    rgba(33, 155, 177, .10),
+                    transparent 30rem
+                ),
+                var(--bg);
+        }
+
+        .shell {
+            width: min(100%, 900px);
+            margin: auto;
+        }
+
+        .topline {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            font-size: .95rem;
+            font-weight: 800;
+            letter-spacing: .02em;
+        }
+
+        .brand-mark {
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            border: 1px solid #3b3b6c;
+            border-radius: 12px;
+            background: linear-gradient(145deg, #242448, #171e2e);
+            font-size: 18px;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: .78rem;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 12px rgba(95, 224, 176, .6);
+        }
+
+        .panel {
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: clamp(22px, 5vw, 46px);
+            background: linear-gradient(
+                145deg,
+                rgba(18, 25, 39, .97),
+                rgba(12, 17, 27, .98)
+            );
+            box-shadow:
+                0 28px 90px rgba(0, 0, 0, .38),
+                inset 0 1px rgba(255, 255, 255, .025);
+        }
+
+        .hero {
+            text-align: center;
+            max-width: 640px;
+            margin: 0 auto 28px;
+        }
+
+        .eyebrow {
+            color: #a69bff;
+            font-size: .72rem;
+            font-weight: 800;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            margin-bottom: 13px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(2rem, 5vw, 3.3rem);
+            line-height: 1.06;
+            letter-spacing: -.055em;
+        }
+
+        .hero p {
+            max-width: 510px;
+            margin: 15px auto 0;
+            color: var(--muted);
+            line-height: 1.7;
+            font-size: .98rem;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 7px;
+            margin: 0 auto 28px;
+            padding: 5px;
+            width: fit-content;
+            max-width: 100%;
+            border: 1px solid #242e41;
+            border-radius: 13px;
+            background: #0b101a;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--muted);
+            font-size: .86rem;
+            font-weight: 700;
+            padding: 10px 17px;
+            border-radius: 9px;
+        }
+
+        nav a:hover {
+            color: var(--text);
+        }
+
+        nav a[aria-current="page"] {
+            color: #fff;
+            background: #29264d;
+            box-shadow: inset 0 0 0 1px #454078;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 15px;
+        }
+
+        .choice {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            min-height: 235px;
+            padding: 25px;
+            border: 1px solid #29344a;
+            border-radius: 18px;
+            background: linear-gradient(155deg, #151e2d, #101621);
+            transition: border-color .2s, transform .2s;
+        }
+
+        .choice:hover {
+            border-color: #6157a5;
+            transform: translateY(-2px);
+        }
+
+        .choice-icon {
+            display: grid;
+            place-items: center;
+            width: 44px;
+            height: 44px;
+            border: 1px solid #393765;
+            border-radius: 13px;
+            background: #242342;
+            font-size: 21px;
+            margin-bottom: 22px;
+        }
+
+        .choice h2 {
+            margin: 0;
+            font-size: 1.18rem;
+        }
+
+        .choice p {
+            margin: 10px 0 22px;
+            color: var(--muted);
+            line-height: 1.65;
+            font-size: .91rem;
+        }
+
+        .action-link,
+        button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            width: 100%;
+            min-height: 46px;
+            padding: 12px 16px;
+            border-radius: 11px;
+            border: 1px solid transparent;
+            background: var(--accent);
+            color: #fff;
+            text-decoration: none;
+            font: inherit;
+            font-size: .9rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: background .15s;
+        }
+
+        .action-link {
+            margin-top: auto;
+        }
+
+        button:hover:not(:disabled),
+        .action-link:hover {
+            background: #7667f1;
+        }
+
+        button:disabled {
+            cursor: wait;
+            opacity: .6;
+        }
+
+        .button-secondary {
+            background: #1a2434;
+            border-color: #344158;
+            color: var(--text);
+        }
+
+        .button-secondary:hover:not(:disabled) {
+            background: #263249;
+        }
+
+        .button-danger {
+            background: rgba(255, 101, 119, .12);
+            border-color: rgba(255, 101, 119, .35);
+            color: #ff9ba7;
+        }
+
+        .button-danger:hover:not(:disabled) {
+            background: rgba(255, 101, 119, .22);
+        }
+
+        .form-panel {
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        .form-panel h2 {
+            margin: 0 0 8px;
+            font-size: 1.15rem;
+        }
+
+        .description {
+            color: var(--muted);
+            margin: 0 0 22px;
+            line-height: 1.6;
+            font-size: .92rem;
+        }
+
+        label {
+            display: block;
+            margin: 18px 0 8px;
+            font-size: .86rem;
+            color: #dbe3f1;
+            font-weight: 750;
+        }
+
+        input,
+        textarea {
+            display: block;
+            width: 100%;
+            border: 1px solid #303d53;
+            border-radius: 11px;
+            padding: 14px 15px;
+            color: var(--text);
+            background: #0a101a;
+            font: inherit;
+            outline: none;
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: #64728a;
+        }
+
+        input:focus,
+        textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(139, 124, 255, .13);
+        }
+
+        textarea {
+            min-height: 155px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .button-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 11px;
+            margin-top: 13px;
+        }
+
+        #status {
+            margin-top: 19px;
+            border: 1px solid #28354a;
+            border-radius: 11px;
+            padding: 13px 15px;
+            color: #b7c4d8;
+            background: #0b111b;
+            line-height: 1.55;
+            font-size: .88rem;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+        }
+
+        #status[data-kind="success"] {
+            color: var(--success);
+            border-color: rgba(95, 224, 176, .25);
+            background: rgba(95, 224, 176, .06);
+        }
+
+        #status[data-kind="error"] {
+            color: #ff9ba7;
+            border-color: rgba(255, 101, 119, .28);
+            background: rgba(255, 101, 119, .06);
+        }
+
+        .result-card {
+            margin-top: 18px;
+            padding: 18px;
+            border: 1px solid #303c53;
+            border-radius: 14px;
+            background: #0c121d;
+        }
+
+        .result-card h3 {
+            margin: 0 0 12px;
+            font-size: .98rem;
+        }
+
+        .secret-message {
+            margin: 0;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid #263247;
+            background: #080d15;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            line-height: 1.6;
+            color: #eef2fb;
+        }
+
+        dl {
+            display: grid;
+            grid-template-columns: 140px minmax(0, 1fr);
+            gap: 12px;
+            margin: 18px 0 0;
+            font-size: .86rem;
+        }
+
+        dt {
+            color: var(--muted);
+        }
+
+        dd {
+            margin: 0;
+            overflow-wrap: anywhere;
+            color: #e2e8f3;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        footer {
+            text-align: center;
+            margin: 19px auto 0;
+            max-width: 620px;
+            color: #6f7d93;
+            font-size: .78rem;
+            line-height: 1.65;
+        }
+
+        @media (max-width: 620px) {
+            body {
+                padding: 16px 10px;
+                align-items: flex-start;
+            }
+
+            .topline {
+                margin-bottom: 12px;
+            }
+
+            .panel {
+                border-radius: 19px;
+                padding: 22px 17px;
+            }
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .choice {
+                min-height: 0;
+            }
+
+            .choice-icon {
+                margin-bottom: 16px;
+            }
+
+            nav a {
+                padding: 9px 13px;
+            }
+
+            .button-row {
+                grid-template-columns: 1fr;
+            }
+
+            dl {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
+
+            dd {
+                margin-bottom: 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="shell">
+        <div class="topline">
+            <div class="brand">
+                <span class="brand-mark" aria-hidden="true">🔐</span>
+                <span>
+                    CMD-CV
+                    <span style="color: #76839a; font-weight: 600">
+                        / SECRET VAULT
+                    </span>
+                </span>
+            </div>
+
+            <div class="status-pill">
+                <span class="status-dot"></span>
+                Ready
+            </div>
+        </div>
+
+        <main class="panel">
+            <header class="hero">
+                <div class="eyebrow">Your private message space</div>
+                <h1>Create a secret</h1>
+                <p>
+                    Store a message and receive a code to retrieve it later.
+                </p>
+            </header>
+
+            <nav aria-label="Main navigation">
+                <a href="./index.html">Home</a>
+                <a href="./create.html" aria-current="page">Create</a>
+                <a href="./read.html">Read</a>
+            </nav>
+
+            <section class="form-panel">
+                <h2>Create a new secret</h2>
+
+                <p class="description">
+                    Write the message you want to store. When it is created,
+                    keep the one-time code somewhere safe.
+                </p>
+
+                <label for="message">Secret message</label>
+                <textarea
+                    id="message"
+                    placeholder="Type your message here..."
+                    maxlength="10000"
+                ></textarea>
+
+                <button id="createButton" type="button">
+                    Create secret →
+                </button>
+
+                <div
+                    id="createdResult"
+                    class="result-card hidden"
+                    aria-live="polite"
+                >
+                    <h3>Your one-time code</h3>
+
+                    <p id="createdUid" class="secret-message"></p>
+
+                    <div class="button-row">
+                        <button
+                            id="copyUidButton"
+                            class="button-secondary"
+                            type="button"
+                        >
+                            Copy code
+                        </button>
+
+                        <a class="action-link" href="./read.html">
+                            Go to Read page →
+                        </a>
+                    </div>
+                </div>
+
+                <div
+                    id="status"
+                    role="status"
+                    aria-live="polite"
+                    data-kind="info"
+                >
+                    Ready to create a secret.
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            Keep your one-time code private. Anyone with a valid code may be
+            able to access its associated record.
+        </footer>
+    </div>
+
+    <script src="./config.js"></script>
+
+    <script>
+        const statusBox = document.getElementById("status");
+        const createButton = document.getElementById("createButton");
+        const messageInput = document.getElementById("message");
+        const createdResult = document.getElementById("createdResult");
+        const createdUid = document.getElementById("createdUid");
+        const copyUidButton = document.getElementById("copyUidButton");
+
+        function getApiBaseUrl() {
+            const value = window.APP_CONFIG?.API_BASE_URL?.trim();
+
+            if (!value) {
+                throw new Error(
+                    "API configuration is missing. Check config.js."
+                );
+            }
+
+            let url;
+
+            try {
+                url = new URL(value);
+            } catch {
+                throw new Error(
+                    "API_BASE_URL in config.js is not a valid URL."
+                );
+            }
+
+            if (url.protocol !== "https:") {
+                throw new Error("API_BASE_URL must use HTTPS.");
+            }
+
+            return url.toString().replace(/\/+$/, "");
+        }
+
+        function showStatus(message, kind = "info") {
+            statusBox.textContent = message;
+            statusBox.dataset.kind = kind;
+        }
+
+        async function apiRequest(path, options = {}) {
+            let response;
+
+            try {
+                response = await fetch(`${getApiBaseUrl()}${path}`, {
+                    ...options,
+                    headers: {
+                        ...(options.body
+                            ? { "Content-Type": "application/json" }
+                            : {}),
+                        ...options.headers
+                    }
+                });
+            } catch (error) {
+                console.error("API request failed:", error);
+
+                throw new Error(
+                    "Could not reach the API. Check the URL and API Gateway CORS settings."
+                );
+            }
+
+            const responseText = await response.text();
+            let data = {};
+
+            if (responseText) {
+                try {
+                    data = JSON.parse(responseText);
+                } catch {
+                    data = { message: responseText };
+                }
+            }
+
+            if (!response.ok) {
+                throw new Error(
+                    typeof data.message === "string"
+                        ? data.message
+                        : `Request failed with HTTP ${response.status}.`
+                );
+            }
+
+            return data;
+        }
+
+        createButton.addEventListener("click", async () => {
+            const message = messageInput.value;
+
+            if (!message.trim()) {
+                showStatus(
+                    "Please enter a message before creating a secret.",
+                    "error"
+                );
+                messageInput.focus();
+                return;
+            }
+
+            createButton.disabled = true;
+            createButton.textContent = "Creating...";
+            createdResult.classList.add("hidden");
+            showStatus("Creating your secret...");
+
+            try {
+                const data = await apiRequest("/create", {
+                    method: "POST",
+                    body: JSON.stringify({ message })
+                });
+
+                if (!data || !data.uid) {
+                    throw new Error(
+                        "The API response did not include a UID."
+                    );
+                }
+
+                createdUid.textContent = String(data.uid);
+                createdResult.classList.remove("hidden");
+
+                showStatus(
+                    "Secret created. Copy and save your one-time code.",
+                    "success"
+                );
+            } catch (error) {
+                console.error("Create failed:", error);
+
+                showStatus(
+                    `Could not create secret: ${error.message}`,
+                    "error"
+                );
+            } finally {
+                createButton.disabled = false;
+                createButton.textContent = "Create secret →";
+            }
+        });
+
+        copyUidButton.addEventListener("click", async () => {
+            const uid = createdUid.textContent;
+
+            if (!uid) {
+                showStatus("There is no code to copy yet.", "error");
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(uid);
+
+                showStatus(
+                    "One-time code copied to clipboard.",
+                    "success"
+                );
+            } catch (error) {
+                console.error("Clipboard copy failed:", error);
+
+                showStatus(
+                    "Clipboard access failed. Select and copy the code manually.",
+                    "error"
+                );
+            }
+        });
+    </script>
+</body>
+</html>
