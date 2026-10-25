@@ -1,3 +1,4 @@
+
 name: Deploy static content to Pages
 
 on:
@@ -16,7 +17,6 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Single deploy job since we're just deploying
   deploy:
     environment:
       name: github-pages
@@ -25,13 +25,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
-          path: '.'
+          # Upload only the public directory
+          path: 'public/'
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
