@@ -226,7 +226,7 @@
             font-size: .9rem;
             font-weight: 800;
             cursor: pointer;
-            transition: background .15s;
+            transition: background .15s, border-color .15s;
         }
 
         button:hover:not(:disabled) {
@@ -236,6 +236,11 @@
         button:disabled {
             cursor: wait;
             opacity: .6;
+        }
+
+        button:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 3px;
         }
 
         .button-danger {
@@ -327,6 +332,113 @@
             display: none !important;
         }
 
+        /* Custom delete confirmation modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, .76);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal {
+            width: min(100%, 420px);
+            padding: 25px;
+            border: 1px solid #303c53;
+            border-radius: 18px;
+            background: linear-gradient(145deg, #151c2a, #0c121d);
+            box-shadow: 0 25px 80px rgba(0, 0, 0, .55);
+            animation: modal-appear .16s ease-out;
+        }
+
+        @keyframes modal-appear {
+            from {
+                opacity: 0;
+                transform: translateY(8px) scale(.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-icon {
+            width: 44px;
+            height: 44px;
+            display: grid;
+            place-items: center;
+            margin-bottom: 17px;
+            border: 1px solid rgba(255, 101, 119, .3);
+            border-radius: 13px;
+            background: rgba(255, 101, 119, .1);
+            font-size: 21px;
+        }
+
+        .modal h2 {
+            margin: 0 0 10px;
+            font-size: 1.25rem;
+            letter-spacing: -.02em;
+        }
+
+        .modal p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.65;
+            font-size: .92rem;
+            overflow-wrap: anywhere;
+        }
+
+        .modal-code {
+            color: var(--text);
+            font-weight: 800;
+        }
+
+        .modal-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .button-secondary {
+            color: #dbe3f1;
+            background: #1a2434;
+            border-color: #303c53;
+        }
+
+        .button-secondary:hover:not(:disabled) {
+            background: #263247;
+        }
+
+        .modal .button-danger {
+            background: #c83f54;
+            border-color: #c83f54;
+            color: #fff;
+        }
+
+        .modal .button-danger:hover:not(:disabled) {
+            background: #e34b62;
+        }
+
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .modal {
+                animation: none;
+            }
+
+            button {
+                transition: none;
+            }
+        }
+
         footer {
             text-align: center;
             margin: 19px auto 0;
@@ -366,6 +478,14 @@
 
             dd {
                 margin-bottom: 8px;
+            }
+
+            .modal {
+                padding: 21px;
+            }
+
+            .modal-actions {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -453,6 +573,49 @@
         </footer>
     </div>
 
+    <!-- Custom delete confirmation modal -->
+    <div
+        id="deleteModal"
+        class="modal-overlay hidden"
+        role="presentation"
+    >
+        <section
+            class="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modalTitle"
+            aria-describedby="modalDescription"
+        >
+            <div class="modal-icon" aria-hidden="true">⚠️</div>
+
+            <h2 id="modalTitle">Delete this secret?</h2>
+
+            <p id="modalDescription">
+                Are you sure you want to delete the secret associated with code
+                <span id="modalUid" class="modal-code"></span>?
+                This action cannot be undone.
+            </p>
+
+            <div class="modal-actions">
+                <button
+                    id="cancelDeleteButton"
+                    class="button-secondary"
+                    type="button"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    id="confirmDeleteButton"
+                    class="button-danger"
+                    type="button"
+                >
+                    Delete secret
+                </button>
+            </div>
+        </section>
+    </div>
+
     <script src="./config.js"></script>
 
     <script>
@@ -461,6 +624,14 @@
         const deleteButton = document.getElementById("deleteButton");
         const uidInput = document.getElementById("uid");
         const retrievedResult = document.getElementById("retrievedResult");
+
+        const deleteModal = document.getElementById("deleteModal");
+        const modalUid = document.getElementById("modalUid");
+        const cancelDeleteButton = document.getElementById("cancelDeleteButton");
+        const confirmDeleteButton = document.getElementById("confirmDeleteButton");
+
+        let pendingDeleteUid = null;
+        let previouslyFocusedElement = null;
 
         function getApiBaseUrl() {
             const value = window.APP_CONFIG?.API_BASE_URL?.trim();
@@ -564,6 +735,27 @@
             retrievedResult.classList.add("hidden");
         }
 
+        function openDeleteModal(uid) {
+            pendingDeleteUid = uid;
+            modalUid.textContent = uid;
+            previouslyFocusedElement = document.activeElement;
+
+            deleteModal.classList.remove("hidden");
+            document.body.classList.add("modal-open");
+            cancelDeleteButton.focus();
+        }
+
+        function closeDeleteModal() {
+            deleteModal.classList.add("hidden");
+            document.body.classList.remove("modal-open");
+            pendingDeleteUid = null;
+
+            if (previouslyFocusedElement) {
+                previouslyFocusedElement.focus();
+                previouslyFocusedElement = null;
+            }
+        }
+
         retrieveButton.addEventListener("click", async () => {
             const uid = uidInput.value.trim();
 
@@ -605,7 +797,7 @@
             }
         });
 
-        deleteButton.addEventListener("click", async () => {
+        deleteButton.addEventListener("click", () => {
             const uid = uidInput.value.trim();
 
             if (!uid) {
@@ -614,15 +806,39 @@
                 return;
             }
 
-            const confirmed = window.confirm(
-                `Delete the secret associated with code ${uid}? This cannot be undone.`
-            );
+            openDeleteModal(uid);
+        });
 
-            if (!confirmed) {
+        cancelDeleteButton.addEventListener("click", closeDeleteModal);
+
+        // Clicking the dark backdrop closes the modal without deleting.
+        deleteModal.addEventListener("click", (event) => {
+            if (event.target === deleteModal) {
+                closeDeleteModal();
+            }
+        });
+
+        // Escape closes the modal without deleting.
+        document.addEventListener("keydown", (event) => {
+            if (
+                event.key === "Escape" &&
+                !deleteModal.classList.contains("hidden")
+            ) {
+                closeDeleteModal();
+            }
+        });
+
+        confirmDeleteButton.addEventListener("click", async () => {
+            const uid = pendingDeleteUid;
+
+            if (!uid || confirmDeleteButton.disabled) {
                 return;
             }
 
-            setBusy(deleteButton, true, "Deleting...", "Delete secret");
+            setBusy(confirmDeleteButton, true, "Deleting...", "Delete secret");
+            cancelDeleteButton.disabled = true;
+            deleteButton.disabled = true;
+
             showStatus("Deleting your secret...");
 
             try {
@@ -631,13 +847,17 @@
                     body: JSON.stringify({ uid })
                 });
 
+                closeDeleteModal();
                 hideResult();
-                showStatus("Delete request succeeded.", "success");
+                showStatus("Secret deleted successfully.", "success");
             } catch (error) {
                 console.error("Delete failed:", error);
+                closeDeleteModal();
                 showStatus(`Could not delete secret: ${error.message}`, "error");
             } finally {
-                setBusy(deleteButton, false, "", "Delete secret");
+                setBusy(confirmDeleteButton, false, "", "Delete secret");
+                cancelDeleteButton.disabled = false;
+                deleteButton.disabled = false;
             }
         });
     </script>
