@@ -1,11 +1,38 @@
-# cmd-cv
+# CMD-CV (drop-box for txt)
 
-[![code-deployment](https://github.com/joelkariyalil/cmd-cv/actions/workflows/cd.yml/badge.svg)](https://github.com/joelkariyalil/cmd-cv/actions/workflows/cd.yml)
+[![Code Deployment](https://github.com/joelkariyalil/cmd-cv/actions/workflows/cd.yml/badge.svg)](https://github.com/joelkariyalil/cmd-cv/actions/workflows/cd.yml)
 
-dropbox for text
+**A simple, serverless text vault for sharing messages between devices.**
 
-the use case: when I was trying to copy the .golangci.yml from one device to another I had to basically do something around manually copy pasting stuff from whatsapp/some other tool that's just not great.
+## The idea
 
-this can actually be a completely serverless application - built on lambdas (right?)
+I wanted to copy my `.golangci.yml` configuration from one device to another without manually sending it through WhatsApp or another messaging app. CMD-CV solves this by letting you store text and retrieve it using a unique code.
 
-this would make complete sense tho :)
+## Architecture
+
+- **Frontend:** HTML, CSS, JavaScript, hosted on GitHub Pages.
+- **Backend:** Go running on AWS Lambda.
+- **API:** Amazon API Gateway HTTP API.
+- **Storage:** Amazon DynamoDB.
+- **Infrastructure:** AWS SAM / CloudFormation.
+
+## Deployment
+
+Prerequisites: AWS CLI, AWS SAM CLI, Go, and an AWS account.
+
+Deploy the backend:
+
+```bash
+sam build
+sam deploy --guided
+```
+
+Configure `config.js` with your API Gateway URL, enable CORS for your GitHub Pages origin, and deploy the frontend through GitHub Pages.
+
+## Security
+
+Keep your secret codes private. Anyone with a valid code may be able to access the associated message. Avoid storing passwords, tokens, or other highly sensitive information.
+
+---
+
+Built to make transferring text between devices a little less annoying. 
