@@ -142,11 +142,31 @@ func (r *DbTable) DeleteRecord(ctx context.Context, uid string) error {
 		return err
 	}
 
+	condition := expression.AttributeExists(expression.Name("PK"))
+
+	expr, err := expression.NewBuilder().
+		WithCondition(condition).
+		Build()
+	if err != nil {
+		return err
+	}
+
 	_, err = r.dbClient.DeleteItem(ctx, &dynamodb.DeleteItemInput{
-		TableName: aws.String(r.tableName),
-		Key:       key,
+		TableName:                 aws.String(r.tableName),
+		Key:                       key,
+		ConditionExpression:       expr.Condition(),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
 	})
-	return err
+	if err != nil {
+		if _, ok := errors.AsType[*types.ConditionalCheckFailedException](err); ok {
+			return ErrRecordNotFound
+		}
+
+		return err
+	}
+
+	return nil
 }
 
 func recordKey(uid string) DbKey {
