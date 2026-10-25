@@ -22,7 +22,7 @@ Resources:
       StageName: $default
       CorsConfiguration:
         AllowOrigins:
-          - 'https://joelkariyalil.github.io'
+          - 'https://joelkariyalil.github.io/'
         AllowHeaders:
           - Content-Type
         AllowMethods:
