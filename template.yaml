@@ -1,3 +1,4 @@
+
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 
@@ -15,6 +16,21 @@ Parameters:
     Default: local
 
 Resources:
+  CmdCvHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins:
+          - 'https://joelkariyalil.github.io'
+        AllowHeaders:
+          - Content-Type
+        AllowMethods:
+          - GET
+          - POST
+          - DELETE
+          - OPTIONS
+        MaxAge: 300
+
   CmdCvDynamodbTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -70,17 +86,20 @@ Resources:
         Create:
           Type: HttpApi
           Properties:
+            ApiId: !Ref CmdCvHttpApi
             Path: /create
             Method: POST
 
         Delete:
           Type: HttpApi
           Properties:
+            ApiId: !Ref CmdCvHttpApi
             Path: /delete
             Method: DELETE
 
         Retrieve:
           Type: HttpApi
           Properties:
+            ApiId: !Ref CmdCvHttpApi
             Path: /retrieve/{id}
             Method: GET
